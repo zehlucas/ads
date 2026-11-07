@@ -15,14 +15,14 @@ fail() { printf 'A checagem inicial não está pronta. Mostre a saída da checag
 
 systemctl is-active --quiet apache2 || fail
 systemctl is-active --quiet ssh || fail
-ufw status | grep -q '^Status: active$' || fail
-ufw status verbose | grep -q 'Default: deny (incoming)' || fail
-ufw status | grep -Eq '^22/tcp[[:space:]]+ALLOW IN' || fail
-ufw status | grep -Eq '^80/tcp[[:space:]]+ALLOW IN' || fail
+ufw status | grep '^Status: active$' >/dev/null || fail
+ufw status verbose | grep -F 'Default: deny (incoming)' >/dev/null || fail
+ufw status | grep -E '^22/tcp[[:space:]]+ALLOW([[:space:]]|$)' >/dev/null || fail
+ufw status | grep -E '^80/tcp[[:space:]]+ALLOW([[:space:]]|$)' >/dev/null || fail
 
 rule_number() {
   local port="$1"
-  ufw status numbered | awk -v p="$port" '$0 ~ "^[[] *[0-9]+[]][[:space:]]+" p "/tcp[[:space:]]+ALLOW IN" && $0 !~ /[(]v6[)]/ {match($0,/^\[[[:space:]]*[0-9]+\]/); n=substr($0,RSTART,RLENGTH); gsub(/[^0-9]/,"",n); print n; exit}'
+  ufw status numbered | awk -v p="$port" '$0 ~ "^[[] *[0-9]+[]][[:space:]]+" p "/tcp[[:space:]]+ALLOW([[:space:]]|$)" && $0 !~ /[(]v6[)]/ && !found {match($0,/^\[[[:space:]]*[0-9]+\]/); n=substr($0,RSTART,RLENGTH); gsub(/[^0-9]/,"",n); print n; found=1}'
 }
 
 case "$scenario" in
